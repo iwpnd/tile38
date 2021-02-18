@@ -66,7 +66,6 @@ func (conn *KafkaConn) Send(msg string) error {
 	uri := fmt.Sprintf("%s:%d", conn.ep.Kafka.Host, conn.ep.Kafka.Port)
 	if conn.conn == nil {
 		cfg := sarama.NewConfig()
-		cfg.ClientID = "Tile38" // otherwise defaults to sarama
 
 		if conn.ep.Kafka.TLS {
 			log.Debugf("building kafka tls config")
