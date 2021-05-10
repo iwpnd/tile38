@@ -88,7 +88,7 @@ func (s *Server) cmdKeys(msg *Message) (res resp.Value, err error) {
 		s.cols.Ascend(nil, iterator)
 	}
 	if msg.OutputType == JSON {
-		wr.WriteString(`],"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		wr.WriteString(`],"elapsed":"` + time.Since(start).String() + "\"}")
 		return resp.StringValue(wr.String()), nil
 	}
 	return resp.ArrayValue(vals), nil

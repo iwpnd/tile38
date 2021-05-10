@@ -269,6 +269,7 @@ func (s *Server) cmdTest(msg *Message) (res resp.Value, err error) {
 	}
 	if len(vs) != 0 {
 		err = errInvalidNumberOfArguments
+		return
 	}
 
 	var result int
@@ -296,7 +297,7 @@ func (s *Server) cmdTest(msg *Message) (res resp.Value, err error) {
 		if clipped != nil {
 			buf.WriteString(`,"object":` + clipped.JSON())
 		}
-		buf.WriteString(`,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		buf.WriteString(`,"elapsed":"` + time.Since(start).String() + "\"}")
 		return resp.StringValue(buf.String()), nil
 	case RESP:
 		if clipped != nil {

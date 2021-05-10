@@ -62,7 +62,6 @@ type qnode struct {
 type queue struct {
 	nodes []qnode
 	len   int
-	size  int
 }
 
 func (q *queue) push(unix int64, item Item) {

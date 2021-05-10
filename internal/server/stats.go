@@ -87,7 +87,7 @@ func (s *Server) cmdStats(msg *Message) (res resp.Value, err error) {
 		if err != nil {
 			return NOMessage, err
 		}
-		res = resp.StringValue(`{"ok":true,"stats":` + string(data) + `,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		res = resp.StringValue(`{"ok":true,"stats":` + string(data) + `,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		res = resp.ArrayValue(vals)
 	}
@@ -368,7 +368,7 @@ func (s *Server) writeInfoPersistence(w *bytes.Buffer) {
 	if currentShrinkStart.IsZero() {
 		fmt.Fprintf(w, "aof_current_rewrite_time_sec:0\r\n") // Duration of the on-going AOF rewrite operation if any
 	} else {
-		fmt.Fprintf(w, "aof_current_rewrite_time_sec:%d\r\n", time.Now().Sub(currentShrinkStart)/time.Second) // Duration of the on-going AOF rewrite operation if any
+		fmt.Fprintf(w, "aof_current_rewrite_time_sec:%d\r\n", time.Since(currentShrinkStart)/time.Second) // Duration of the on-going AOF rewrite operation if any
 	}
 }
 
@@ -477,7 +477,7 @@ func (s *Server) cmdInfo(msg *Message) (res resp.Value, err error) {
 		if err != nil {
 			return NOMessage, err
 		}
-		res = resp.StringValue(`{"ok":true,"info":` + string(data) + `,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		res = resp.StringValue(`{"ok":true,"info":` + string(data) + `,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		res = resp.BytesValue(w.Bytes())
 	}
@@ -513,29 +513,4 @@ func respValuesSimpleMap(m map[string]interface{}) []resp.Value {
 		vals = append(vals, resp.StringValue(fmt.Sprintf("%v", val)))
 	}
 	return vals
-}
-
-func (s *Server) statsCollections(line string) (string, error) {
-	start := time.Now()
-	var key string
-	var ms = []map[string]interface{}{}
-	for len(line) > 0 {
-		line, key = token(line)
-		col := s.getCol(key)
-		if col != nil {
-			m := make(map[string]interface{})
-			points := col.PointCount()
-			m["num_points"] = points
-			m["in_memory_size"] = col.TotalWeight()
-			m["num_objects"] = col.Count()
-			ms = append(ms, m)
-		} else {
-			ms = append(ms, nil)
-		}
-	}
-	data, err := json.Marshal(ms)
-	if err != nil {
-		return "", err
-	}
-	return `{"ok":true,"stats":` + string(data) + `,"elapsed":"` + time.Now().Sub(start).String() + "\"}", nil
 }

@@ -32,7 +32,7 @@ func (conn *KafkaConn) Expired() bool {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 	if !conn.ex {
-		if time.Now().Sub(conn.t) > kafkaExpiresAfter {
+		if time.Since(conn.t) > kafkaExpiresAfter {
 			if conn.conn != nil {
 				conn.close()
 			}
@@ -143,6 +143,5 @@ func newKafkaTLSConfig(CertFile, KeyFile, CACertFile string) (*tls.Config, error
 	caCertPool.AppendCertsFromPEM(caCert)
 	tlsConfig.RootCAs = caCertPool
 
-	tlsConfig.BuildNameToCertificate()
 	return &tlsConfig, err
 }

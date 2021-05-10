@@ -47,7 +47,7 @@ func TestClipPolygonSimple(t *testing.T) {
 		{X: 2, Y: 2},
 	}
 	holes := [][]geometry.Point{
-		[]geometry.Point{
+		{
 			{X: 1.9, Y: 1.9},
 			{X: 1.2, Y: 1.9},
 			{X: 1.45, Y: 1.65},
@@ -79,7 +79,7 @@ func TestClipPolygon2(t *testing.T) {
 		{X: 2, Y: 2},
 	}
 	holes := [][]geometry.Point{
-		[]geometry.Point{
+		{
 			{X: 1.9, Y: 1.9},
 			{X: 1.2, Y: 1.9},
 			{X: 1.45, Y: 1.65},

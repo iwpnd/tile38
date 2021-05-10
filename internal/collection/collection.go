@@ -13,8 +13,8 @@ import (
 	"github.com/tidwall/tile38/internal/deadline"
 )
 
-// yieldStep forces the iterator to yield goroutine every 255 steps.
-const yieldStep = 255
+// yieldStep forces the iterator to yield goroutine every 256 steps.
+const yieldStep = 256
 
 // Cursor allows for quickly paging through Scan, Within, Intersects, and Nearby
 type Cursor interface {
@@ -57,8 +57,6 @@ type Collection struct {
 	objects     int // geometry count
 	nobjects    int // non-geometry count
 }
-
-var counter uint64
 
 // New creates an empty collection
 func New() *Collection {
@@ -765,7 +763,7 @@ func (c *Collection) Nearby(
 }
 
 func nextStep(step uint64, cursor Cursor, deadline *deadline.Deadline) {
-	if step&yieldStep == yieldStep {
+	if step&(yieldStep-1) == (yieldStep - 1) {
 		runtime.Gosched()
 		deadline.Check()
 	}

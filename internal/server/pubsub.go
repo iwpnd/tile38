@@ -166,7 +166,7 @@ func (s *Server) cmdPublish(msg *Message) (resp.Value, error) {
 	case JSON:
 		res = resp.StringValue(`{"ok":true` +
 			`,"published":` + strconv.FormatInt(int64(n), 10) +
-			`,"elapsed":"` + time.Now().Sub(start).String() + `"}`)
+			`,"elapsed":"` + time.Since(start).String() + `"}`)
 	case RESP:
 		res = resp.IntegerValue(n)
 	}
@@ -200,7 +200,7 @@ func (s *Server) liveSubscription(
 		switch outputType {
 		case JSON:
 			write([]byte(`{"ok":true` +
-				`,"elapsed":"` + time.Now().Sub(start).String() + `"}`))
+				`,"elapsed":"` + time.Since(start).String() + `"}`))
 		case RESP:
 			write([]byte("+OK\r\n"))
 		}
@@ -209,7 +209,7 @@ func (s *Server) liveSubscription(
 		switch outputType {
 		case JSON:
 			write([]byte(`{"ok":false,"err":"invalid number of arguments"` +
-				`,"elapsed":"` + time.Now().Sub(start).String() + `"}`))
+				`,"elapsed":"` + time.Since(start).String() + `"}`))
 		case RESP:
 			write([]byte("-ERR wrong number of arguments " +
 				"for '" + command + "' command\r\n"))
@@ -221,7 +221,7 @@ func (s *Server) liveSubscription(
 			write([]byte(`{"ok":false` +
 				`,"err":"only (P)SUBSCRIBE / (P)UNSUBSCRIBE / ` +
 				`PING / QUIT allowed in this context"` +
-				`,"elapsed":"` + time.Now().Sub(start).String() + `"}`))
+				`,"elapsed":"` + time.Since(start).String() + `"}`))
 		case RESP:
 			write([]byte("-ERR only (P)SUBSCRIBE / (P)UNSUBSCRIBE / " +
 				"PING / QUIT allowed in this context\r\n"))
@@ -234,7 +234,7 @@ func (s *Server) liveSubscription(
 				`,"command":` + jsonString(command) +
 				`,"channel":` + jsonString(channel) +
 				`,"num":` + strconv.FormatInt(int64(num), 10) +
-				`,"elapsed":"` + time.Now().Sub(start).String() + `"}`))
+				`,"elapsed":"` + time.Since(start).String() + `"}`))
 		case RESP:
 			b := redcon.AppendArray(nil, 3)
 			b = redcon.AppendBulkString(b, command)

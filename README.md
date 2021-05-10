@@ -24,7 +24,7 @@ Tile38 is an open source (MIT licensed), in-memory geolocation data store, spati
 - Spatial index with [search](#searching) methods such as Nearby, Within, and Intersects.
 - Realtime [geofencing](#geofencing) through [webhooks](https://tile38.com/commands/sethook) or [pub/sub channels](#pubsub-channels).
 - Object types of [lat/lon](#latlon-point), [bbox](#bounding-box), [Geohash](#geohash), [GeoJSON](#geojson), [QuadKey](#quadkey), and [XYZ tile](#xyz-tile).
-- Support for lots of [Clients Libraries](#client-libraries) written in many different languages.
+- Support for lots of [Clients Libraries](#tile38-client-libraries) written in many different languages.
 - Variety of protocols, including [http](#http) (curl), [websockets](#websockets), [telnet](#telnet), and the [Redis RESP](https://redis.io/topics/protocol).
 - Server responses are [RESP](https://redis.io/topics/protocol) or [JSON](https://www.json.org).
 - Full [command line interface](#cli).
@@ -278,7 +278,7 @@ A QuadKey used the same coordinate system as an XYZ tile except that the string 
 
 ## Network protocols
 
-It's recommended to use a [client library](#client-libraries) or the [Tile38 CLI](#running), but there are times when only HTTP is available or when you need to test from a remote terminal. In those cases we provide an HTTP and telnet options.
+It's recommended to use a [client library](#tile38-client-libraries) or the [Tile38 CLI](#running), but there are times when only HTTP is available or when you need to test from a remote terminal. In those cases we provide an HTTP and telnet options.
 
 #### HTTP
 One of the simplest ways to call a tile38 command is to use HTTP. From the command line you can use [curl](https://curl.haxx.se/). For example:
@@ -309,9 +309,25 @@ The server will respond in [JSON](https://json.org) or [RESP](https://redis.io/t
 - HTTP and Websockets use JSON. 
 - Telnet and RESP clients use RESP.
 
-## Client Libraries
+## Tile38 Client Libraries
 
-Tile38 uses the [Redis RESP](https://redis.io/topics/protocol) protocol natively. Therefore most clients that support basic Redis commands will in turn support Tile38. Below are a few of the popular clients. 
+The following clients are built specifically for Tile38.  
+Clients that support most Tile38 features are marked with a ⭐️.
+
+- ⭐️ Go: [xjem/t38c](https://github.com/xjem/t38c)
+- ⭐️ Node.js: [node-tile38](https://github.com/phulst/node-tile38) ([example code](https://github.com/tidwall/tile38/wiki/Node.js-example-(node-tile38)))
+- ⭐️ Python: [pyle38](https://github.com/iwpnd/pyle38)
+- Go: [cjkreklow/t38c](https://github.com/cjkreklow/t38c)
+- Python: [pytile38](https://github.com/mitghi/pytile38)
+- Rust: [nazar](https://github.com/younisshah/nazar)
+- Swift: [Talon](https://github.com/mikekinney/Talon)
+- Java: [tile38-client-java](https://github.com/jamshidrostami/tile38-client-java)
+- Java: [tile38-client](https://github.com/HkMoyun/tile38-client)
+
+## Redis Client Libraries
+
+Tile38 uses the [Redis RESP](https://redis.io/topics/protocol) protocol natively. 
+Therefore most clients that support basic Redis commands will also support Tile38.
 
 - C: [hiredis](https://github.com/redis/hiredis)
 - C#: [StackExchange.Redis](https://github.com/StackExchange/StackExchange.Redis)
@@ -319,12 +335,10 @@ Tile38 uses the [Redis RESP](https://redis.io/topics/protocol) protocol natively
 - Clojure: [carmine](https://github.com/ptaoussanis/carmine)
 - Common Lisp: [CL-Redis](https://github.com/vseloved/cl-redis)
 - Erlang: [Eredis](https://github.com/wooga/eredis)
-- Go: [tile38-client](https://github.com/b3q/tile38-client)
 - Go: [go-redis](https://github.com/go-redis/redis) ([example code](https://github.com/tidwall/tile38/wiki/Go-example-(go-redis)))
 - Go: [redigo](https://github.com/gomodule/redigo) ([example code](https://github.com/tidwall/tile38/wiki/Go-example-(redigo)))
 - Haskell: [hedis](https://github.com/informatikr/hedis)
 - Java: [lettuce](https://github.com/mp911de/lettuce) ([example code](https://github.com/tidwall/tile38/wiki/Java-example-(lettuce)))
-- Node.js: [node-tile38](https://github.com/phulst/node-tile38) ([example code](https://github.com/tidwall/tile38/wiki/Node.js-example-(node-tile38)))
 - Node.js: [node_redis](https://github.com/NodeRedis/node_redis) ([example code](https://github.com/tidwall/tile38/wiki/Node.js-example-(node-redis)))
 - Perl: [perl-redis](https://github.com/PerlRedis/perl-redis)
 - PHP: [tinyredisclient](https://github.com/ptrofimov/tinyredisclient) ([example code](https://github.com/tidwall/tile38/wiki/PHP-example-(tinyredisclient)))

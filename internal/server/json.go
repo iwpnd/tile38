@@ -222,7 +222,7 @@ func (s *Server) cmdJget(msg *Message) (resp.Value, error) {
 		if res.Exists() {
 			buf.WriteString(`,"value":` + jsonString(val))
 		}
-		buf.WriteString(`,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		buf.WriteString(`,"elapsed":"` + time.Since(start).String() + "\"}")
 		return resp.StringValue(buf.String()), nil
 	case RESP:
 		if !res.Exists() {
@@ -311,7 +311,7 @@ func (s *Server) cmdJset(msg *Message) (res resp.Value, d commandDetails, err er
 	case JSON:
 		var buf bytes.Buffer
 		buf.WriteString(`{"ok":true`)
-		buf.WriteString(`,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		buf.WriteString(`,"elapsed":"` + time.Since(start).String() + "\"}")
 		return resp.StringValue(buf.String()), d, nil
 	case RESP:
 		return resp.SimpleStringValue("OK"), d, nil
@@ -377,7 +377,7 @@ func (s *Server) cmdJdel(msg *Message) (res resp.Value, d commandDetails, err er
 	case JSON:
 		var buf bytes.Buffer
 		buf.WriteString(`{"ok":true`)
-		buf.WriteString(`,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		buf.WriteString(`,"elapsed":"` + time.Since(start).String() + "\"}")
 		return resp.StringValue(buf.String()), d, nil
 	case RESP:
 		return resp.IntegerValue(1), d, nil

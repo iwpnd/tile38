@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.23.0] = 2020-04-01
+### Updated
+- #598: Added TLS Config to Kafka (@iwpnd)
+- #599: Include "distance" to output when user specifically requests (@iwpnd)
+- #597: Allow for all command types for roaming event (@johnpmayer)
+- 31a0fbd: Upgraded dependencies and moved to Go 1.16
+
+### Fixed
+- #600: Fix invalid queue.db error (@lokisisland)
+- #603: Fix tile38-cli output showing protocol size when piping (@bb)
+
 ## [1.22.6] = 2020-02-07
 ### Updated
 - 72dfaae: Updated various dependencies

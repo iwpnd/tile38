@@ -34,7 +34,7 @@ func (s *Server) cmdOutput(msg *Message) (res resp.Value, err error) {
 	default:
 		return NOMessage, nil
 	case JSON:
-		return resp.StringValue(`{"ok":true,"output":"json","elapsed":` + time.Now().Sub(start).String() + `}`), nil
+		return resp.StringValue(`{"ok":true,"output":"json","elapsed":` + time.Since(start).String() + `}`), nil
 	case RESP:
 		return resp.StringValue("resp"), nil
 	}

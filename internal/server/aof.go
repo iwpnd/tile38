@@ -29,8 +29,6 @@ func (err errAOFHook) Error() string {
 	return fmt.Sprintf("hook: %v", err.err)
 }
 
-var errInvalidAOF = errors.New("invalid aof file")
-
 func (s *Server) loadAOF() (err error) {
 	fi, err := s.aof.Stat()
 	if err != nil {
@@ -39,7 +37,7 @@ func (s *Server) loadAOF() (err error) {
 	start := time.Now()
 	var count int
 	defer func() {
-		d := time.Now().Sub(start)
+		d := time.Since(start)
 		ps := float64(count) / (float64(d) / float64(time.Second))
 		suf := []string{"bytes/s", "KB/s", "MB/s", "GB/s", "TB/s"}
 		bps := float64(fi.Size()) / (float64(d) / float64(time.Second))
@@ -95,7 +93,7 @@ func (s *Server) loadAOF() (err error) {
 					continue
 				}
 				if zeros > 0 {
-					return errors.New("Zeros found in AOF file (issue #230)")
+					return clientErrorf("Zeros found in AOF file (issue #230)")
 				}
 			}
 			complete, args, _, data, err = redcon.ReadNextCommand(data, args[:0])
@@ -211,9 +209,7 @@ func (s *Server) writeAOF(args []string, d *commandDetails) error {
 		if len(s.lives) > 0 {
 			if d.parent {
 				// queue children
-				for _, d := range d.children {
-					s.lstack = append(s.lstack, d)
-				}
+				s.lstack = append(s.lstack, d.children...)
 			} else {
 				// queue parent
 				s.lstack = append(s.lstack, d)
@@ -444,7 +440,7 @@ func (s *Server) cmdAOFMD5(msg *Message) (res resp.Value, err error) {
 	switch msg.OutputType {
 	case JSON:
 		res = resp.StringValue(
-			fmt.Sprintf(`{"ok":true,"md5":"%s","elapsed":"%s"}`, sum, time.Now().Sub(start)))
+			fmt.Sprintf(`{"ok":true,"md5":"%s","elapsed":"%s"}`, sum, time.Since(start)))
 	case RESP:
 		res = resp.SimpleStringValue(sum)
 	}

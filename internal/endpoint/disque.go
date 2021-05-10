@@ -32,7 +32,7 @@ func (conn *DisqueConn) Expired() bool {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 	if !conn.ex {
-		if time.Now().Sub(conn.t) > disqueExpiresAfter {
+		if time.Since(conn.t) > disqueExpiresAfter {
 			if conn.conn != nil {
 				conn.close()
 			}

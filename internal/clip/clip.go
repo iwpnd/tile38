@@ -79,9 +79,9 @@ func clipRing(ring []geometry.Point, bbox geometry.Rect) (
 				// Entering
 				resRing = append(resRing, intersect(bbox, edge, prev, p))
 				resRing = append(resRing, p)
-			} else {
-				// Staying outside
-			}
+			} /* else {
+				// Stay outside
+			} */
 			prev, prevInside = p, inside
 		}
 		if len(resRing) > 0 && resRing[0] != resRing[len(resRing)-1] {
@@ -137,8 +137,9 @@ func intersect(bbox geometry.Rect, code uint8, start, end geometry.Point) (
 			X: bbox.Min.X,
 			Y: start.Y + (end.Y-start.Y)*(bbox.Min.X-start.X)/(end.X-start.X),
 		}
-	} else { // should not call intersect with the zero code
-	}
+	} /* else {
+		// should not call intersect with the zero code
+	} */
 
 	return
 }

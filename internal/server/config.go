@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -241,7 +240,7 @@ func (config *Config) setProperty(name, value string, fromLoad bool) error {
 	var invalid bool
 	switch name {
 	default:
-		return fmt.Errorf("Unsupported CONFIG parameter: %s", name)
+		return clientErrorf("Unsupported CONFIG parameter: %s", name)
 	case RequirePass:
 		config._requirePass = value
 	case LeaderAuth:
@@ -259,7 +258,7 @@ func (config *Config) setProperty(name, value string, fromLoad bool) error {
 	case MaxMemory:
 		sz, ok := parseMemSize(value)
 		if !ok {
-			return fmt.Errorf("Invalid argument '%s' for CONFIG SET '%s'", value, name)
+			return clientErrorf("Invalid argument '%s' for CONFIG SET '%s'", value, name)
 		}
 		config._maxMemory = sz
 	case ProtectedMode:
@@ -289,7 +288,7 @@ func (config *Config) setProperty(name, value string, fromLoad bool) error {
 	}
 
 	if invalid {
-		return fmt.Errorf("Invalid argument '%s' for CONFIG SET '%s'", value, name)
+		return clientErrorf("Invalid argument '%s' for CONFIG SET '%s'", value, name)
 	}
 	return nil
 }
@@ -345,7 +344,7 @@ func (s *Server) cmdConfigGet(msg *Message) (res resp.Value, err error) {
 		if err != nil {
 			return NOMessage, err
 		}
-		res = resp.StringValue(`{"ok":true,"properties":` + string(data) + `,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		res = resp.StringValue(`{"ok":true,"properties":` + string(data) + `,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		vals := respValuesSimpleMap(m)
 		res = resp.ArrayValue(vals)
@@ -397,18 +396,6 @@ func (config *Config) followPort() int {
 	v := config._followPort
 	config.mu.RUnlock()
 	return int(v)
-}
-func (config *Config) followID() string {
-	config.mu.RLock()
-	v := config._followID
-	config.mu.RUnlock()
-	return v
-}
-func (config *Config) followPos() int64 {
-	config.mu.RLock()
-	v := config._followPos
-	config.mu.RUnlock()
-	return v
 }
 func (config *Config) serverID() string {
 	config.mu.RLock()
@@ -468,53 +455,8 @@ func (config *Config) setFollowPort(v int) {
 	config._followPort = int64(v)
 	config.mu.Unlock()
 }
-func (config *Config) setFollowID(v string) {
-	config.mu.Lock()
-	config._followID = v
-	config.mu.Unlock()
-}
-func (config *Config) setFollowPos(v int64) {
-	config.mu.Lock()
-	config._followPos = v
-	config.mu.Unlock()
-}
-func (config *Config) setServerID(v string) {
-	config.mu.Lock()
-	config._serverID = v
-	config.mu.Unlock()
-}
 func (config *Config) setReadOnly(v bool) {
 	config.mu.Lock()
 	config._readOnly = v
-	config.mu.Unlock()
-}
-func (config *Config) setRequirePass(v string) {
-	config.mu.Lock()
-	config._requirePass = v
-	config.mu.Unlock()
-}
-func (config *Config) setLeaderAuth(v string) {
-	config.mu.Lock()
-	config._leaderAuth = v
-	config.mu.Unlock()
-}
-func (config *Config) setProtectedMode(v string) {
-	config.mu.Lock()
-	config._protectedMode = v
-	config.mu.Unlock()
-}
-func (config *Config) setMaxMemory(v int) {
-	config.mu.Lock()
-	config._maxMemory = int64(v)
-	config.mu.Unlock()
-}
-func (config *Config) setAutoGC(v uint64) {
-	config.mu.Lock()
-	config._autoGC = v
-	config.mu.Unlock()
-}
-func (config *Config) setKeepAlive(v int64) {
-	config.mu.Lock()
-	config._keepAlive = v
 	config.mu.Unlock()
 }

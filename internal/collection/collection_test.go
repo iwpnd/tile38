@@ -44,8 +44,7 @@ func TestCollectionNewCollection(t *testing.T) {
 	c := New()
 	for i := 0; i < numItems; i++ {
 		id := strconv.FormatInt(int64(i), 10)
-		var obj geojson.Object
-		obj = PO(rand.Float64()*360-180, rand.Float64()*180-90)
+		obj := PO(rand.Float64()*360-180, rand.Float64()*180-90)
 		objs[id] = obj
 		c.Set(id, obj, nil, nil)
 	}
@@ -168,23 +167,23 @@ func TestCollectionSet(t *testing.T) {
 
 		expect(t, len(c.FieldMap()) == 0)
 
-		v, flds, updated, ok = c.SetField("3", "hello", 123)
+		_, flds, updated, ok = c.SetField("3", "hello", 123)
 		expect(t, ok)
 		expect(t, reflect.DeepEqual(flds, []float64{123}))
 		expect(t, updated)
 		expect(t, c.FieldMap()["hello"] == 0)
 
-		v, flds, updated, ok = c.SetField("3", "hello", 1234)
+		_, flds, updated, ok = c.SetField("3", "hello", 1234)
 		expect(t, ok)
 		expect(t, reflect.DeepEqual(flds, []float64{1234}))
 		expect(t, updated)
 
-		v, flds, updated, ok = c.SetField("3", "hello", 1234)
+		_, flds, updated, ok = c.SetField("3", "hello", 1234)
 		expect(t, ok)
 		expect(t, reflect.DeepEqual(flds, []float64{1234}))
 		expect(t, !updated)
 
-		v, flds, updateCount, ok = c.SetFields("3",
+		_, flds, updateCount, ok = c.SetFields("3",
 			[]string{"planet", "world"}, []float64{55, 66})
 		expect(t, ok)
 		expect(t, reflect.DeepEqual(flds, []float64{1234, 55, 66}))

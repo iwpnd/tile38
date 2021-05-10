@@ -154,6 +154,6 @@ func (s *Server) migrateAOF() error {
 	}
 	oldf.Close()
 	newf.Close()
-	log.Debugf("%d items: %.0f/sec", count, float64(count)/(float64(time.Now().Sub(start))/float64(time.Second)))
+	log.Debugf("%d items: %.0f/sec", count, float64(count)/(float64(time.Since(start))/float64(time.Second)))
 	return os.Rename(path.Join(s.dir, "migrate.aof"), path.Join(s.dir, "appendonly.aof"))
 }

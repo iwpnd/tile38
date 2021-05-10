@@ -58,7 +58,7 @@ func (s *Server) cmdScan(msg *Message) (res resp.Value, err error) {
 	sw.writeHead()
 	if sw.col != nil {
 		if sw.output == outputCount && len(sw.wheres) == 0 &&
-			len(sw.whereins) == 0 && sw.globEverything == true {
+			len(sw.whereins) == 0 && sw.globEverything {
 			count := sw.col.Count() - int(args.cursor)
 			if count < 0 {
 				count = 0
@@ -93,7 +93,7 @@ func (s *Server) cmdScan(msg *Message) (res resp.Value, err error) {
 	}
 	sw.writeFoot()
 	if msg.OutputType == JSON {
-		wr.WriteString(`,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		wr.WriteString(`,"elapsed":"` + time.Since(start).String() + "\"}")
 		return resp.BytesValue(wr.Bytes()), nil
 	}
 	return sw.respOut, nil

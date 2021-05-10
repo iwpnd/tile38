@@ -128,7 +128,7 @@ type Server struct {
 	hookex expire.List
 
 	monconnsMu sync.RWMutex
-	monconns   map[net.Conn]bool
+	monconns   map[net.Conn]bool // monitor connections
 }
 
 // Serve starts a new tile38 server
@@ -261,7 +261,7 @@ func Serve(host string, port int, dir string, http bool) error {
 	if err := server.migrateAOF(); err != nil {
 		return err
 	}
-	if core.AppendOnly == true {
+	if core.AppendOnly {
 		f, err := os.OpenFile(core.AppendFileName, os.O_CREATE|os.O_RDWR, 0600)
 		if err != nil {
 			return err
@@ -567,7 +567,7 @@ func (server *Server) watchAutoGC() {
 		if autoGC == 0 {
 			continue
 		}
-		if time.Now().Sub(s) < time.Second*time.Duration(autoGC) {
+		if time.Since(s) < time.Second*time.Duration(autoGC) {
 			continue
 		}
 		var mem1, mem2 runtime.MemStats
@@ -767,9 +767,9 @@ func (server *Server) handleInputCommand(client *Client, msg *Message) error {
 		switch msg.OutputType {
 		case JSON:
 			if len(msg.Args) > 1 {
-				return writeOutput(`{"ok":true,"` + msg.Command() + `":` + jsonString(msg.Args[1]) + `,"elapsed":"` + time.Now().Sub(start).String() + `"}`)
+				return writeOutput(`{"ok":true,"` + msg.Command() + `":` + jsonString(msg.Args[1]) + `,"elapsed":"` + time.Since(start).String() + `"}`)
 			}
-			return writeOutput(`{"ok":true,"` + msg.Command() + `":"pong","elapsed":"` + time.Now().Sub(start).String() + `"}`)
+			return writeOutput(`{"ok":true,"` + msg.Command() + `":"pong","elapsed":"` + time.Since(start).String() + `"}`)
 		case RESP:
 			if len(msg.Args) > 1 {
 				data := redcon.AppendBulkString(nil, msg.Args[1])
@@ -784,7 +784,7 @@ func (server *Server) handleInputCommand(client *Client, msg *Message) error {
 	writeErr := func(errMsg string) error {
 		switch msg.OutputType {
 		case JSON:
-			return writeOutput(`{"ok":false,"err":` + jsonString(errMsg) + `,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+			return writeOutput(`{"ok":false,"err":` + jsonString(errMsg) + `,"elapsed":"` + time.Since(start).String() + "\"}")
 		case RESP:
 			if errMsg == errInvalidNumberOfArguments.Error() {
 				return writeOutput("-ERR wrong number of arguments for '" + msg.Command() + "' command\r\n")
@@ -1148,19 +1148,6 @@ password. NOTE: You only need to do one of the above things in order for the
 server to start accepting connections from the outside.
 `), "\n", " ", -1) + "\r\n")
 
-// SetKeepAlive sets the connection keepalive
-func setKeepAlive(conn net.Conn, period time.Duration) error {
-	if tcp, ok := conn.(*net.TCPConn); ok {
-		if err := tcp.SetKeepAlive(true); err != nil {
-			return err
-		}
-		return tcp.SetKeepAlivePeriod(period)
-	}
-	return nil
-}
-
-var errCloseHTTP = errors.New("close http")
-
 // WriteWebSocketMessage write a websocket message to an io.Writer.
 func WriteWebSocketMessage(w io.Writer, data []byte) error {
 	var msg []byte
@@ -1189,7 +1176,7 @@ func WriteWebSocketMessage(w io.Writer, data []byte) error {
 func OKMessage(msg *Message, start time.Time) resp.Value {
 	switch msg.OutputType {
 	case JSON:
-		return resp.StringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		return resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		return resp.SimpleStringValue("OK")
 	}
@@ -1512,4 +1499,12 @@ func (is *InputStream) End(data []byte) {
 	} else if len(is.b) > 0 {
 		is.b = is.b[:0]
 	}
+}
+
+// clientErrorf is the same as fmt.Errorf, but is intented for errors that are
+// sent back to the client. This allows for the Go static checker to ignore
+// throwing warning for certain error strings.
+// https://staticcheck.io/docs/checks#ST1005
+func clientErrorf(format string, args ...interface{}) error {
+	return fmt.Errorf(format, args...)
 }

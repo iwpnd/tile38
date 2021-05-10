@@ -31,7 +31,7 @@ func (conn *NATSConn) Expired() bool {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 	if !conn.ex {
-		if time.Now().Sub(conn.t) > natsExpiresAfter {
+		if time.Since(conn.t) > natsExpiresAfter {
 			if conn.conn != nil {
 				conn.close()
 			}

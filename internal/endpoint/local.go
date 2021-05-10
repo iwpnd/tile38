@@ -1,11 +1,5 @@
 package endpoint
 
-import (
-	"time"
-)
-
-const localExpiresAfter = time.Second * 30
-
 // LocalPublisher is used to publish local notifcations
 type LocalPublisher interface {
 	Publish(channel string, message ...string) int

@@ -38,8 +38,7 @@ func (server *Server) aofshrink() {
 		server.shrinking = false
 		server.shrinklog = nil
 		server.mu.Unlock()
-		log.Infof("aof shrink ended %v", time.Now().Sub(start))
-		return
+		log.Infof("aof shrink ended %v", time.Since(start))
 	}()
 
 	err := func() error {
@@ -199,20 +198,16 @@ func (server *Server) aofshrink() {
 				} else {
 					values = append(values, "sethook", name,
 						strings.Join(hook.Endpoints, ","))
-					values = append(values)
 				}
 				for _, meta := range hook.Metas {
 					values = append(values, "meta", meta.Name, meta.Value)
 				}
 				if !hook.expires.IsZero() {
-					ex := float64(hook.expires.Sub(time.Now())) /
-						float64(time.Second)
+					ex := float64(time.Until(hook.expires)) / float64(time.Second)
 					values = append(values, "ex",
 						strconv.FormatFloat(ex, 'f', 1, 64))
 				}
-				for _, value := range hook.Message.Args {
-					values = append(values, value)
-				}
+				values = append(values, hook.Message.Args...)
 				// append the values to the aof buffer
 				aofbuf = append(aofbuf, '*')
 				aofbuf = append(aofbuf, strconv.FormatInt(int64(len(values)), 10)...)

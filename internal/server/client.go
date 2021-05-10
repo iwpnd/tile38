@@ -60,8 +60,9 @@ func (s *Server) cmdClient(msg *Message, client *Client) (resp.Value, error) {
 	}
 	switch strings.ToLower(msg.Args[1]) {
 	default:
-		return NOMessage, errors.New("Syntax error, try CLIENT " +
-			"(LIST | KILL | GETNAME | SETNAME)")
+		return NOMessage, clientErrorf(
+			"Syntax error, try CLIENT (LIST | KILL | GETNAME | SETNAME)",
+		)
 	case "list":
 		if len(msg.Args) != 2 {
 			return NOMessage, errInvalidNumberOfArguments
@@ -114,7 +115,7 @@ func (s *Server) cmdClient(msg *Message, client *Client) (resp.Value, error) {
 			if err != nil {
 				return NOMessage, err
 			}
-			return resp.StringValue(`{"ok":true,"list":` + string(data) + `,"elapsed":"` + time.Now().Sub(start).String() + "\"}"), nil
+			return resp.StringValue(`{"ok":true,"list":` + string(data) + `,"elapsed":"` + time.Since(start).String() + "\"}"), nil
 		case RESP:
 			return resp.BytesValue(buf), nil
 		}
@@ -131,7 +132,7 @@ func (s *Server) cmdClient(msg *Message, client *Client) (resp.Value, error) {
 			client.mu.Unlock()
 			return resp.StringValue(`{"ok":true,"name":` +
 				jsonString(name) +
-				`,"elapsed":"` + time.Now().Sub(start).String() + "\"}"), nil
+				`,"elapsed":"` + time.Since(start).String() + "\"}"), nil
 		case RESP:
 			return resp.StringValue(name), nil
 		}
@@ -142,8 +143,9 @@ func (s *Server) cmdClient(msg *Message, client *Client) (resp.Value, error) {
 		name := msg.Args[2]
 		for i := 0; i < len(name); i++ {
 			if name[i] < '!' || name[i] > '~' {
-				errstr := "Client names cannot contain spaces, newlines or special characters."
-				return NOMessage, errors.New(errstr)
+				return NOMessage, clientErrorf(
+					"Client names cannot contain spaces, newlines or special characters.",
+				)
 			}
 		}
 		client.mu.Lock()
@@ -151,7 +153,7 @@ func (s *Server) cmdClient(msg *Message, client *Client) (resp.Value, error) {
 		client.mu.Unlock()
 		switch msg.OutputType {
 		case JSON:
-			return resp.StringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}"), nil
+			return resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}"), nil
 		case RESP:
 			return resp.SimpleStringValue("OK"), nil
 		}
@@ -172,7 +174,7 @@ func (s *Server) cmdClient(msg *Message, client *Client) (resp.Value, error) {
 			}
 			switch strings.ToLower(arg) {
 			default:
-				return NOMessage, errors.New("No such client")
+				return NOMessage, clientErrorf("No such client")
 			case "addr":
 				i++
 				if i == len(msg.Args) {
@@ -202,13 +204,13 @@ func (s *Server) cmdClient(msg *Message, client *Client) (resp.Value, error) {
 		}
 		s.connsmu.RUnlock()
 		if cclose == nil {
-			return NOMessage, errors.New("No such client")
+			return NOMessage, clientErrorf("No such client")
 		}
 
 		var res resp.Value
 		switch msg.OutputType {
 		case JSON:
-			res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+			res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
 		case RESP:
 			res = resp.SimpleStringValue("OK")
 		}
@@ -229,32 +231,3 @@ func (s *Server) cmdClient(msg *Message, client *Client) (resp.Value, error) {
 	}
 	return NOMessage, errors.New("invalid output type")
 }
-
-/*
-func (c *Controller) cmdClientList(msg *Message) (string, error) {
-
-	var ok bool
-	var key string
-	if vs, key, ok = tokenval(vs); !ok || key == "" {
-		return "", errInvalidNumberOfArguments
-	}
-
-	col := c.getCol(key)
-	if col == nil {
-		if msg.OutputType == RESP {
-			return "+none\r\n", nil
-		}
-		return "", errKeyNotFound
-	}
-
-	typ := "hash"
-
-	switch msg.OutputType {
-	case JSON:
-		return `{"ok":true,"type":` + string(typ) + `,"elapsed":"` + time.Now().Sub(start).String() + "\"}", nil
-	case RESP:
-		return "+" + typ + "\r\n", nil
-	}
-	return "", nil
-}
-*/

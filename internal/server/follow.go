@@ -107,7 +107,7 @@ func (s *Server) cmdReplConf(msg *Message, client *Client) (res resp.Value, err 
 	if vs, cmd, ok = tokenval(vs); !ok || cmd == "" {
 		return NOMessage, errInvalidNumberOfArguments
 	}
-	if vs, val, ok = tokenval(vs); !ok || val == "" {
+	if _, val, ok = tokenval(vs); !ok || val == "" {
 		return NOMessage, errInvalidNumberOfArguments
 	}
 

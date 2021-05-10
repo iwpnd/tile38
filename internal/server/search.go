@@ -380,6 +380,7 @@ func (server *Server) cmdNearby(msg *Message) (res resp.Value, err error) {
 				o:               o,
 				fields:          fields,
 				distance:        meters,
+				distOutput:      s.distance,
 				noLock:          true,
 				ignoreGlobMatch: true,
 				skipTesting:     true,
@@ -389,7 +390,7 @@ func (server *Server) cmdNearby(msg *Message) (res resp.Value, err error) {
 	}
 	sw.writeFoot()
 	if msg.OutputType == JSON {
-		wr.WriteString(`,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		wr.WriteString(`,"elapsed":"` + time.Since(start).String() + "\"}")
 		return resp.BytesValue(wr.Bytes()), nil
 	}
 	return sw.respOut, nil
@@ -517,7 +518,7 @@ func (server *Server) cmdWithinOrIntersects(cmd string, msg *Message) (res resp.
 	}
 	sw.writeFoot()
 	if msg.OutputType == JSON {
-		wr.WriteString(`,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		wr.WriteString(`,"elapsed":"` + time.Since(start).String() + "\"}")
 		return resp.BytesValue(wr.Bytes()), nil
 	}
 	return sw.respOut, nil
@@ -569,7 +570,7 @@ func (server *Server) cmdSearch(msg *Message) (res resp.Value, err error) {
 	}
 	sw.writeHead()
 	if sw.col != nil {
-		if sw.output == outputCount && len(sw.wheres) == 0 && sw.globEverything == true {
+		if sw.output == outputCount && len(sw.wheres) == 0 && sw.globEverything {
 			count := sw.col.Count() - int(s.cursor)
 			if count < 0 {
 				count = 0
@@ -608,7 +609,7 @@ func (server *Server) cmdSearch(msg *Message) (res resp.Value, err error) {
 	}
 	sw.writeFoot()
 	if msg.OutputType == JSON {
-		wr.WriteString(`,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		wr.WriteString(`,"elapsed":"` + time.Since(start).String() + "\"}")
 		return resp.BytesValue(wr.Bytes()), nil
 	}
 	return sw.respOut, nil

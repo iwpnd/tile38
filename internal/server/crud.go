@@ -87,7 +87,7 @@ func (server *Server) cmdBounds(msg *Message) (resp.Value, error) {
 	}
 	switch msg.OutputType {
 	case JSON:
-		buf.WriteString(`,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		buf.WriteString(`,"elapsed":"` + time.Since(start).String() + "\"}")
 		return resp.StringValue(buf.String()), nil
 	case RESP:
 		return vals[0], nil
@@ -101,7 +101,7 @@ func (server *Server) cmdType(msg *Message) (resp.Value, error) {
 
 	var ok bool
 	var key string
-	if vs, key, ok = tokenval(vs); !ok || key == "" {
+	if _, key, ok = tokenval(vs); !ok || key == "" {
 		return NOMessage, errInvalidNumberOfArguments
 	}
 
@@ -117,7 +117,7 @@ func (server *Server) cmdType(msg *Message) (resp.Value, error) {
 
 	switch msg.OutputType {
 	case JSON:
-		return resp.StringValue(`{"ok":true,"type":` + string(typ) + `,"elapsed":"` + time.Now().Sub(start).String() + "\"}"), nil
+		return resp.StringValue(`{"ok":true,"type":` + string(typ) + `,"elapsed":"` + time.Since(start).String() + "\"}"), nil
 	case RESP:
 		return resp.SimpleStringValue(typ), nil
 	}
@@ -269,7 +269,7 @@ func (server *Server) cmdGet(msg *Message) (resp.Value, error) {
 	}
 	switch msg.OutputType {
 	case JSON:
-		buf.WriteString(`,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		buf.WriteString(`,"elapsed":"` + time.Since(start).String() + "\"}")
 		return resp.StringValue(buf.String()), nil
 	case RESP:
 		var oval resp.Value
@@ -316,7 +316,7 @@ func (server *Server) cmdDel(msg *Message) (res resp.Value, d commandDetails, er
 	d.timestamp = time.Now()
 	switch msg.OutputType {
 	case JSON:
-		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		if d.updated {
 			res = resp.IntegerValue(1)
@@ -396,7 +396,7 @@ func (server *Server) cmdPdel(msg *Message) (res resp.Value, d commandDetails, e
 	d.parent = true
 	switch msg.OutputType {
 	case JSON:
-		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		total := len(d.children) - expired
 		if total < 0 {
@@ -432,7 +432,7 @@ func (server *Server) cmdDrop(msg *Message) (res resp.Value, d commandDetails, e
 	server.clearKeyExpires(d.key)
 	switch msg.OutputType {
 	case JSON:
-		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		if d.updated {
 			res = resp.IntegerValue(1)
@@ -489,7 +489,7 @@ func (server *Server) cmdRename(msg *Message, nx bool) (res resp.Value, d comman
 	d.timestamp = time.Now()
 	switch msg.OutputType {
 	case JSON:
-		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		if !nx {
 			res = resp.SimpleStringValue("OK")
@@ -520,7 +520,7 @@ func (server *Server) cmdFlushDB(msg *Message) (res resp.Value, d commandDetails
 	d.timestamp = time.Now()
 	switch msg.OutputType {
 	case JSON:
-		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		res = resp.SimpleStringValue("OK")
 	}
@@ -798,7 +798,7 @@ func (server *Server) cmdSet(msg *Message, resetExpires bool) (res resp.Value, d
 	switch msg.OutputType {
 	default:
 	case JSON:
-		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		res = resp.SimpleStringValue("OK")
 	}
@@ -899,7 +899,7 @@ func (server *Server) cmdFset(msg *Message) (res resp.Value, d commandDetails, e
 
 	switch msg.OutputType {
 	case JSON:
-		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		res = resp.IntegerValue(updateCount)
 	}
@@ -946,7 +946,7 @@ func (server *Server) cmdExpire(msg *Message) (res resp.Value, d commandDetails,
 	switch msg.OutputType {
 	case JSON:
 		if ok {
-			res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+			res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
 		} else {
 			return resp.SimpleStringValue(""), d, errIDNotFound
 		}
@@ -998,7 +998,7 @@ func (server *Server) cmdPersist(msg *Message) (res resp.Value, d commandDetails
 	d.timestamp = time.Now()
 	switch msg.OutputType {
 	case JSON:
-		res = resp.SimpleStringValue(`{"ok":true,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+		res = resp.SimpleStringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		if cleared {
 			res = resp.IntegerValue(1)
@@ -1040,7 +1040,7 @@ func (server *Server) cmdTTL(msg *Message) (res resp.Value, err error) {
 				if time.Now().After(at) {
 					ok2 = false
 				} else {
-					v = float64(at.Sub(time.Now())) / float64(time.Second)
+					v = float64(time.Until(at)) / float64(time.Second)
 					if v < 0 {
 						v = 0
 					}
@@ -1058,7 +1058,7 @@ func (server *Server) cmdTTL(msg *Message) (res resp.Value, err error) {
 				ttl = "-1"
 			}
 			res = resp.SimpleStringValue(
-				`{"ok":true,"ttl":` + ttl + `,"elapsed":"` + time.Now().Sub(start).String() + "\"}")
+				`{"ok":true,"ttl":` + ttl + `,"elapsed":"` + time.Since(start).String() + "\"}")
 		} else {
 			return resp.SimpleStringValue(""), errIDNotFound
 		}

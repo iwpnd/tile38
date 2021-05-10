@@ -109,7 +109,9 @@ func (s *Server) cmdSetHook(msg *Message, chanCmd bool) (
 		break
 	}
 	args, err := s.cmdSearchArgs(true, cmdlc, vs, types)
-	defer args.Close()
+	if args.usingLua() {
+		defer args.Close()
+	}
 	if err != nil {
 		return NOMessage, d, err
 	}
@@ -252,7 +254,7 @@ func (s *Server) cmdDelHook(msg *Message, chanCmd bool) (
 		delete(s.hooks, hook.Name)
 		delete(s.hooksOut, hook.Name)
 		// remove hook from spatial index
-		if hook != nil && hook.Fence != nil && hook.Fence.obj != nil {
+		if hook.Fence != nil && hook.Fence.obj != nil {
 			rect := hook.Fence.obj.Rect()
 			s.hookTree.Delete(
 				[2]float64{rect.Min.X, rect.Min.Y},
@@ -310,7 +312,7 @@ func (s *Server) cmdPDelHook(msg *Message, channel bool) (
 		delete(s.hooks, hook.Name)
 		delete(s.hooksOut, hook.Name)
 		// remove hook from spatial index
-		if hook != nil && hook.Fence != nil && hook.Fence.obj != nil {
+		if hook.Fence != nil && hook.Fence.obj != nil {
 			rect := hook.Fence.obj.Rect()
 			s.hookTree.Delete(
 				[2]float64{rect.Min.X, rect.Min.Y},
@@ -439,7 +441,7 @@ func (s *Server) cmdHooks(msg *Message, channel bool) (
 			buf.WriteString(`}}`)
 		}
 		buf.WriteString(`],"elapsed":"` +
-			time.Now().Sub(start).String() + "\"}")
+			time.Since(start).String() + "\"}")
 		return resp.StringValue(buf.String()), nil
 	case RESP:
 		var vals []resp.Value
