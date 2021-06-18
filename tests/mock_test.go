@@ -52,7 +52,7 @@ func mockOpenServer() (*mockServer, error) {
 	s := &mockServer{port: port}
 	tlog.SetOutput(logOutput)
 	go func() {
-		if err := server.Serve("localhost", port, dir, true); err != nil {
+		if err := server.Serve("localhost", port, dir, true, ":4321"); err != nil {
 			log.Fatal(err)
 		}
 	}()

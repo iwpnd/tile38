@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -90,6 +91,24 @@ func (s *Server) cmdStats(msg *Message) (res resp.Value, err error) {
 		res = resp.StringValue(`{"ok":true,"stats":` + string(data) + `,"elapsed":"` + time.Since(start).String() + "\"}")
 	case RESP:
 		res = resp.ArrayValue(vals)
+	}
+	return res, nil
+}
+
+func (s *Server) cmdHealthz(msg *Message) (res resp.Value, err error) {
+	start := time.Now()
+	if s.config.followHost() != "" {
+		m := make(map[string]interface{})
+		s.basicStats(m)
+		if fmt.Sprintf("%v", m["caught_up"]) != "true" {
+			return NOMessage, errors.New("not caught up")
+		}
+	}
+	switch msg.OutputType {
+	case JSON:
+		res = resp.StringValue(`{"ok":true,"elapsed":"` + time.Since(start).String() + "\"}")
+	case RESP:
+		res = resp.SimpleStringValue("OK")
 	}
 	return res, nil
 }

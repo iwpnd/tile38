@@ -133,13 +133,13 @@ func testcmd_expressionErrors_test(mc *mockServer) error {
 			"ERR invalid argument 'or'"},
 		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "AND", "GET", "mykey", "bar"}, {
 			"ERR invalid argument 'and'"},
-		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "OR", "AND",  "GET", "mykey", "baz"}, {
+		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "OR", "AND", "GET", "mykey", "baz"}, {
 			"ERR invalid argument 'and'"},
-		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "AND", "OR",  "GET", "mykey", "baz"}, {
+		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "AND", "OR", "GET", "mykey", "baz"}, {
 			"ERR invalid argument 'or'"},
-		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "OR", "OR",  "GET", "mykey", "baz"}, {
+		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "OR", "OR", "GET", "mykey", "baz"}, {
 			"ERR invalid argument 'or'"},
-		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "AND", "AND",  "GET", "mykey", "baz"}, {
+		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "AND", "AND", "GET", "mykey", "baz"}, {
 			"ERR invalid argument 'and'"},
 		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "OR"}, {
 			"ERR wrong number of arguments for 'test' command"},
@@ -147,7 +147,7 @@ func testcmd_expressionErrors_test(mc *mockServer) error {
 			"ERR wrong number of arguments for 'test' command"},
 		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "NOT"}, {
 			"ERR wrong number of arguments for 'test' command"},
-		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "NOT", "AND",  "GET", "mykey", "baz"}, {
+		{"TEST", "GET", "mykey", "foo", "INTERSECTS", "GET", "mykey", "bar", "NOT", "AND", "GET", "mykey", "baz"}, {
 			"ERR invalid argument 'and'"},
 	})
 }

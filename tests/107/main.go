@@ -100,7 +100,7 @@ func main() {
 
 func startTile38Server() {
 	log.Println("start tile38 server")
-	err := server.Serve("localhost", tile38Port, "data", false)
+	err := server.Serve("localhost", tile38Port, "data", false, "")
 	if err != nil {
 		log.Fatal(err)
 	}

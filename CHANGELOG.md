@@ -2,7 +2,26 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.23.0] = 2020-04-01
+## [1.24.3] = 2021-06-09
+### Fixed
+- af43d5a: Hotfix. Fixed invalid healthz output.
+
+## [1.24.2] = 2021-06-07
+### Updated
+- b610633: Update Go to 1.16
+
+## [1.24.1] = 2021-06-07
+### Added
+- #609: Added HEALTHZ command (@iwpnd, @stevelacy)
+
+## [1.24.0] = 2021-05-19
+### Added
+- #604: Added Prometheus metrics (@oliver006)
+
+### Fixed
+- #605: Remove deprecated threads flag (@cep-ter) 
+
+## [1.23.0] = 2021-04-01
 ### Updated
 - #598: Added TLS Config to Kafka (@iwpnd)
 - #599: Include "distance" to output when user specifically requests (@iwpnd)
@@ -13,7 +32,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - #600: Fix invalid queue.db error (@lokisisland)
 - #603: Fix tile38-cli output showing protocol size when piping (@bb)
 
-## [1.22.6] = 2020-02-07
+## [1.22.6] = 2021-02-07
 ### Updated
 - 72dfaae: Updated various dependencies
 - 016f397: Updated btree library, optimization 

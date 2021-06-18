@@ -21,23 +21,9 @@ import (
 	"github.com/tidwall/tile38/internal/hservice"
 	"github.com/tidwall/tile38/internal/log"
 	"github.com/tidwall/tile38/internal/server"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-)
-
-var (
-	dir         string
-	port        int
-	host        string
-	verbose     bool
-	veryVerbose bool
-	devMode     bool
-	quiet       bool
-	pidfile     string
-	cpuprofile  string
-	memprofile  string
-	pprofport   int
-	nohup       bool
 )
 
 // TODO: Set to false in 2.*
@@ -100,7 +86,6 @@ Advanced Options:
   --queuefilename path    : Event queue path (default:data/queue.db)
   --http-transport yes/no : HTTP transport (default: yes)
   --protected-mode yes/no : protected mode (default: yes)
-  --threads num           : number of network threads (default: num cores)
   --nohup                 : do not exit on SIGHUP
 
 Developer Options:
@@ -152,7 +137,12 @@ Developer Options:
 		return
 	}
 
-	var showEvioDisabled bool
+	var (
+		devMode             bool
+		nohup               bool
+		showEvioDisabled    bool
+		showThreadsDisabled bool
+	)
 
 	// parse non standard args.
 	nargs := []string{os.Args[0]}
@@ -230,15 +220,15 @@ Developer Options:
 		case "--threads", "-threads":
 			i++
 			if i < len(os.Args) {
-				n, err := strconv.ParseUint(os.Args[i], 10, 16)
+				_, err := strconv.ParseUint(os.Args[i], 10, 16)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "threads must be a valid number\n")
 					os.Exit(1)
 				}
-				core.NumThreads = int(n)
+				showThreadsDisabled = true
 				continue
 			}
-			fmt.Fprintf(os.Stderr, "http-transport must be 'yes' or 'no'\n")
+			fmt.Fprintf(os.Stderr, "threads must be a valid number \n")
 			os.Exit(1)
 		case "--evio", "-evio":
 			i++
@@ -255,6 +245,21 @@ Developer Options:
 		nargs = append(nargs, os.Args[i])
 	}
 	os.Args = nargs
+
+	metricsAddr := flag.String("metrics-addr", "", "The listening addr for Prometheus metrics.")
+
+	var (
+		dir         string
+		port        int
+		host        string
+		verbose     bool
+		veryVerbose bool
+		quiet       bool
+		pidfile     string
+		cpuprofile  string
+		memprofile  string
+		pprofport   int
+	)
 
 	flag.IntVar(&port, "p", 9851, "The listening port.")
 	flag.StringVar(&pidfile, "pidfile", "", "A file that contains the pid")
@@ -403,6 +408,7 @@ Developer Options:
   |       |       |   tile38.com
   |_______|_______| 
 `+"\n", core.Version, gitsha, strconv.IntSize, runtime.GOARCH, runtime.GOOS, hostd, port, os.Getpid())
+
 	if pidferr != nil {
 		log.Warnf("pidfile: %v", pidferr)
 	}
@@ -410,7 +416,11 @@ Developer Options:
 		// we don't currently support evio in Tile38
 		log.Warnf("evio is not currently supported")
 	}
-	if err := server.Serve(host, port, dir, httpTransport); err != nil {
+	if showThreadsDisabled {
+		log.Warnf("thread flag is deprecated use GOMAXPROCS to set number of threads instead")
+	}
+
+	if err := server.Serve(host, port, dir, httpTransport, *metricsAddr); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	net_http "net/http"
 	"net/url"
 	"os"
 	"path"
@@ -37,6 +38,8 @@ import (
 	"github.com/tidwall/tile38/internal/endpoint"
 	"github.com/tidwall/tile38/internal/expire"
 	"github.com/tidwall/tile38/internal/log"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var errOOM = errors.New("OOM command not allowed when used memory > 'maxmemory'")
@@ -132,7 +135,7 @@ type Server struct {
 }
 
 // Serve starts a new tile38 server
-func Serve(host string, port int, dir string, http bool) error {
+func Serve(host string, port int, dir string, http bool, metricsAddr string) error {
 	if core.AppendFileName == "" {
 		core.AppendFileName = path.Join(dir, "appendonly.aof")
 	}
@@ -282,6 +285,16 @@ func Serve(host string, port int, dir string, http bool) error {
 		go server.follow(server.config.followHost(), server.config.followPort(),
 			server.followc.get())
 	}
+
+	if metricsAddr != "" {
+		log.Infof("Listening for metrics at: %s", metricsAddr)
+		go func() {
+			net_http.HandleFunc("/", server.MetricsIndexHandler)
+			net_http.HandleFunc("/metrics", server.MetricsHandler)
+			log.Fatal(net_http.ListenAndServe(metricsAddr, nil))
+		}()
+	}
+
 	go server.processLives()
 	go server.watchOutOfMemory()
 	go server.watchLuaStatePool()
@@ -731,7 +744,8 @@ func (server *Server) handleInputCommand(client *Client, msg *Message) error {
 			return WriteWebSocketMessage(client, []byte(res))
 		case HTTP:
 			status := "200 OK"
-			if server.http500Errors && !gjson.Get(res, "ok").Bool() {
+			if (server.http500Errors || msg._command == "healthz") &&
+				!gjson.Get(res, "ok").Bool() {
 				status = "500 Internal Server Error"
 			}
 			_, err := fmt.Fprintf(client, "HTTP/1.1 %s\r\n"+
@@ -762,14 +776,20 @@ func (server *Server) handleInputCommand(client *Client, msg *Message) error {
 		}
 	}
 
+	cmd := msg.Command()
+	defer func() {
+		took := time.Now().Sub(start).Seconds()
+		cmdDurations.With(prometheus.Labels{"cmd": cmd}).Observe(took)
+	}()
+
 	// Ping. Just send back the response. No need to put through the pipeline.
-	if msg.Command() == "ping" || msg.Command() == "echo" {
+	if cmd == "ping" || cmd == "echo" {
 		switch msg.OutputType {
 		case JSON:
 			if len(msg.Args) > 1 {
-				return writeOutput(`{"ok":true,"` + msg.Command() + `":` + jsonString(msg.Args[1]) + `,"elapsed":"` + time.Since(start).String() + `"}`)
+				return writeOutput(`{"ok":true,"` + cmd + `":` + jsonString(msg.Args[1]) + `,"elapsed":"` + time.Since(start).String() + `"}`)
 			}
-			return writeOutput(`{"ok":true,"` + msg.Command() + `":"pong","elapsed":"` + time.Since(start).String() + `"}`)
+			return writeOutput(`{"ok":true,"` + cmd + `":"pong","elapsed":"` + time.Since(start).String() + `"}`)
 		case RESP:
 			if len(msg.Args) > 1 {
 				data := redcon.AppendBulkString(nil, msg.Args[1])
@@ -787,7 +807,7 @@ func (server *Server) handleInputCommand(client *Client, msg *Message) error {
 			return writeOutput(`{"ok":false,"err":` + jsonString(errMsg) + `,"elapsed":"` + time.Since(start).String() + "\"}")
 		case RESP:
 			if errMsg == errInvalidNumberOfArguments.Error() {
-				return writeOutput("-ERR wrong number of arguments for '" + msg.Command() + "' command\r\n")
+				return writeOutput("-ERR wrong number of arguments for '" + cmd + "' command\r\n")
 			}
 			v, _ := resp.ErrorValue(errors.New("ERR " + errMsg)).MarshalRESP()
 			return writeOutput(string(v))
@@ -795,7 +815,7 @@ func (server *Server) handleInputCommand(client *Client, msg *Message) error {
 		return nil
 	}
 
-	if msg.Command() == "timeout" {
+	if cmd == "timeout" {
 		if err := rewriteTimeoutMsg(msg); err != nil {
 			return writeErr(err.Error())
 		}
@@ -803,11 +823,11 @@ func (server *Server) handleInputCommand(client *Client, msg *Message) error {
 
 	var write bool
 
-	if (!client.authd || msg.Command() == "auth") && msg.Command() != "output" {
+	if (!client.authd || cmd == "auth") && cmd != "output" {
 		if server.config.requirePass() != "" {
 			password := ""
 			// This better be an AUTH command or the Message should contain an Auth
-			if msg.Command() != "auth" && msg.Auth == "" {
+			if cmd != "auth" && msg.Auth == "" {
 				// Just shut down the pipeline now. The less the client connection knows the better.
 				return writeErr("authentication required")
 			}
@@ -862,7 +882,7 @@ func (server *Server) handleInputCommand(client *Client, msg *Message) error {
 		}
 	case "get", "keys", "scan", "nearby", "within", "intersects", "hooks",
 		"chans", "search", "ttl", "bounds", "server", "info", "type", "jget",
-		"evalro", "evalrosha":
+		"evalro", "evalrosha", "healthz":
 		// read operations
 
 		server.mu.RLock()
@@ -898,7 +918,7 @@ func (server *Server) handleInputCommand(client *Client, msg *Message) error {
 		// No locking for scripts, otherwise writes cannot happen within scripts
 	case "subscribe", "psubscribe", "publish":
 		// No locking for pubsub
-	case "montior":
+	case "monitor":
 		// No locking for monitor
 	}
 	res, d, err := func() (res resp.Value, d commandDetails, err error) {
@@ -1048,6 +1068,8 @@ func (server *Server) command(msg *Message, client *Client) (
 		res, err = server.cmdStats(msg)
 	case "server":
 		res, err = server.cmdServer(msg)
+	case "healthz":
+		res, err = server.cmdHealthz(msg)
 	case "info":
 		res, err = server.cmdInfo(msg)
 	case "scan":

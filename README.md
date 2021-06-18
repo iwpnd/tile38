@@ -92,6 +92,20 @@ $ ./tile38-cli
 > help
 ```
 
+#### Prometheus Metrics
+Tile38 can natively export Prometheus metrics by setting the `--metrics-addr` command line flag (disabled by default). This example exposes the HTTP metrics server on port 4321:
+```
+# start server and enable Prometheus metrics, listen on local interface only
+./tile38-server --metrics-addr=127.0.0.1:4321
+
+# access metrics
+curl http://127.0.0.1:4321/metrics
+```
+If you need to access the `/metrics` endpoint from a different host you'll have to set the flag accordingly, e.g. set it to `0.0.0.0:<<port>>` to listen on all interfaces.
+
+Use the [redis_exporter](https://github.com/oliver006/redis_exporter) for more advanced use cases like extracting key values or running a lua script.
+
+
 ## <a name="cli"></a>Playing with Tile38
 
 Basic operations:
@@ -274,7 +288,6 @@ Check out [maptiler.org](http://www.maptiler.org/google-maps-coordinates-tile-bo
 
 #### QuadKey
 A QuadKey used the same coordinate system as an XYZ tile except that the string representation is a string characters composed of 0, 1, 2, or 3. For a detailed explanation checkout [The Bing Maps Tile System](https://msdn.microsoft.com/en-us/library/bb259689.aspx).
-
 
 ## Network protocols
 
