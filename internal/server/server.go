@@ -123,7 +123,7 @@ type Server struct {
 	hookCross  rtree.RTree      // hook spatial tree for "cross" geofences
 	hookTree   rtree.RTree      // hook spatial tree for all
 	hooksOut   map[string]*Hook // hooks with "outside" detection
-	aofconnM   map[net.Conn]bool
+	aofconnM   map[net.Conn]io.Closer
 	luascripts *lScriptMap
 	luapool    *lStatePool
 
@@ -155,7 +155,7 @@ func Serve(host string, port int, dir string, http bool, metricsAddr string) err
 		lcond:    sync.NewCond(&sync.Mutex{}),
 		hooks:    make(map[string]*Hook),
 		hooksOut: make(map[string]*Hook),
-		aofconnM: make(map[net.Conn]bool),
+		aofconnM: make(map[net.Conn]io.Closer),
 		expires:  rhh.New(0),
 		started:  time.Now(),
 		conns:    make(map[int]*Client),

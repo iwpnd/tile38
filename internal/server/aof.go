@@ -483,8 +483,16 @@ func (s *Server) cmdAOF(msg *Message) (res resp.Value, err error) {
 }
 
 func (s *Server) liveAOF(pos int64, conn net.Conn, rd *PipelineReader, msg *Message) error {
+	s.mu.RLock()
+	f, err := os.Open(s.aof.Name())
+	s.mu.RUnlock()
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
 	s.mu.Lock()
-	s.aofconnM[conn] = true
+	s.aofconnM[conn] = f
 	s.mu.Unlock()
 	defer func() {
 		s.mu.Lock()
@@ -497,13 +505,6 @@ func (s *Server) liveAOF(pos int64, conn net.Conn, rd *PipelineReader, msg *Mess
 		return err
 	}
 
-	s.mu.RLock()
-	f, err := os.Open(s.aof.Name())
-	s.mu.RUnlock()
-	if err != nil {
-		return err
-	}
-	defer f.Close()
 	if _, err := f.Seek(pos, 0); err != nil {
 		return err
 	}
@@ -552,11 +553,13 @@ func (s *Server) liveAOF(pos int64, conn net.Conn, rd *PipelineReader, msg *Mess
 			// The reader needs to be OK with the eof not
 			for {
 				n, err := f.Read(b)
-				if err != io.EOF && n > 0 {
-					if err != nil {
+				if n > 0 {
+					if _, err := conn.Write(b[:n]); err != nil {
 						return err
 					}
-					if _, err := conn.Write(b[:n]); err != nil {
+				}
+				if err != io.EOF {
+					if err != nil {
 						return err
 					}
 					continue

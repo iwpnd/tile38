@@ -237,6 +237,18 @@ func (server *Server) aofshrink() {
 			server.mu.Lock()
 			defer server.mu.Unlock()
 
+			// kill all followers connections and close their files. This
+			// ensures that there is only one opened AOF at a time which is
+			// what Windows requires in order to perform the Rename function
+			// below.
+			for conn, f := range server.aofconnM {
+				conn.Close()
+				f.Close()
+			}
+
+			// send a broadcast to all sleeping followers
+			server.fcond.Broadcast()
+
 			// flush the aof buffer
 			server.flushAOF(false)
 
@@ -291,10 +303,6 @@ func (server *Server) aofshrink() {
 
 			os.Remove(core.AppendFileName + "-bak") // ignore error
 
-			// kill all followers connections
-			for conn := range server.aofconnM {
-				conn.Close()
-			}
 			return nil
 		}()
 	}()
